@@ -86,6 +86,17 @@ Before inspecting the target, determine the active harness's effective tool and 
 
 Do not assume a tool policy exists merely because this file says "change nothing." Verify the effective permission layer where possible.
 
+**Verify it by observing what the runtime does, not by reading the configuration that claims to restrict it.** A denylist is an intent; the capability you actually hold is the enforcement. Take evidence in this order and classify it accordingly:
+
+1. **Authoritative runtime enumeration**, where the harness exposes a machine-readable inventory of the tools in force — **Observed**.
+2. **A benign call test**: attempt one harmless operation in each capability class that should be unavailable, and record the failure. A capability that is genuinely absent fails differently from one that is present and refused at call time — **Observed**.
+3. **A runtime self-description**, asking the session to describe what it holds — **Inferred**, never better. A model can omit what it cannot see, and deferred or lazily-loaded tools are exactly what it cannot see.
+4. **Configuration inspection alone** — **Unverified**. It is the claim under test, not evidence for it.
+
+Do not verify by tool name. Enumerate by capability: **execution, mutation, egress, delegation, and credential use**. A name-shaped denylist ages badly, and a capability can re-enter through a tool nobody thought to name, through a connected external tool server, through another session, or through a path that is not a tool at all.
+
+Where the harness adapter carries a procedure for this, follow it. A restriction you cannot observe the effect of is **Unverified**, whatever the configuration says.
+
 ## Scope
 
 Audit both surfaces when accessible:
@@ -175,6 +186,7 @@ Rank findings by downstream blast radius. Lead with the widest-reach finding.
 ## Rules
 
 - **Never expose secrets.** Never print, echo, partially reveal, or summarize secret values. Reference credential name, source, consuming component, and `file:line` only.
+- **Reading a credential can copy it.** The rule above governs output; persistence happens at input. A secret read into context may be written to transcripts, logs, caches, or telemetry, creating a durable copy outside the original's protections. No read-only profile prevents this — the harness does the writing, not the model. Determine the active harness's persistence behavior before reading secret values; identify credentials by name and location wherever the finding does not require the value; and where a value must be read, count every location it now occupies in the finding's reach.
 - **Change nothing.** Do not edit files, rotate credentials, revoke tokens, modify IAM, alter tool-server configuration, install packages, change network rules, commit code, or open pull requests.
 - **Prefer passive inspection.** Use structurally read-only capabilities whenever possible.
 - **Do not prove reach destructively.** Do not test credentials with state-changing requests or probe production merely to demonstrate access.
