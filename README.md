@@ -52,18 +52,54 @@ Claude Code — it does not remove the others — so declaring it would create t
 very *looks enforced but is not* boundary this audit exists to find.
 
 If you want the boundary actually enforced, that is an operator step in your
-own permission settings. On Claude Code, deny rules and `disallowed-tools` can
-remove named tools from the model. Consider denying at least `Write`, `Edit`,
-`NotebookEdit`, `Bash`, `WebFetch`, `WebSearch` and `Task` for the run — the
-last three because an auditor that reads credentials must not also be able to
-send what it reads or delegate around its own limits.
+own permission settings. On Claude Code, deny rules and `disallowed-tools`
+remove named tools from the model's set entirely, so they are real local
+enforcement rather than a prompt.
 
-Note the limit: those controls are **denylists**, so a mutation-capable tool
-installed later, or simply not named, remains available. Verify the effective
-tool set rather than trusting the list. Checks that genuinely need shell —
-repository history for secrets, file ownership, symlink resolution — are
-reported under **Could Not Enumerate** naming the narrowest capability that
-would close each gap.
+Deny at minimum `Write`, `Edit`, `NotebookEdit`, `Bash`, `WebFetch`,
+`WebSearch` and `Task`/`Agent` — the last three because an auditor that reads
+credentials must not also be able to send what it reads or delegate around its
+own limits.
+
+**Treat that as a floor, not a set.** These controls are **denylists**, so a
+mutation-capable tool that is newer than this file, or simply unnamed, remains
+available — and the tool surface moves faster than the list. Two that a
+Bash-shaped denylist misses today:
+
+- **`Monitor`** takes an arbitrary shell `command` and runs it in the same
+  environment as `Bash`, plus a `ws:` option for arbitrary WebSocket egress. It
+  survives a `Bash` deny completely.
+- **`Artifact`** publishes a page to the web. An auditor that reads credentials
+  must not hold a publish button.
+
+Shell also re-enters through paths that are not tools: skills and slash
+commands can execute inline shell, and hooks run outside the permission layer
+altogether. On Claude Code, `disableSkillShellExecution` and `disableAllHooks`
+close those.
+
+**So do not trust any list, including this one — verify.** The adapter carries
+the one-command procedure: [Verifying the effective tool
+set](./agent-exposure-audit/harnesses/claude-code.md#verifying-the-effective-tool-set).
+Run it before the audit, and again after any harness upgrade.
+
+Checks that genuinely need shell — repository history for secrets, file
+ownership, symlink resolution — are reported under **Could Not Enumerate**
+naming the narrowest capability that would close each gap.
+
+### Auditing a credential creates a copy of it
+
+The audit's no-secrets rule governs its **report**, and the report obeys it:
+findings cite a credential's name, source, consumer and `file:line`, never a
+value. But persistence happens at **input**, not output. Reading a file to
+audit it puts the contents in the model's context, and most harnesses write
+that context to a session transcript on disk — so auditing a plaintext
+credential silently creates a durable second copy of it, outside whatever
+protections the original had.
+
+No read-only profile prevents this: the harness writes the transcript, not the
+model. Prefer identifying credentials by name and location over reading their
+values, establish liveness out-of-band where you can, and treat the audit's own
+transcript as in-scope when reporting where a secret now lives.
 
 ## Install
 

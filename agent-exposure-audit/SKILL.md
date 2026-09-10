@@ -86,6 +86,8 @@ Before inspecting the target, determine the active harness's effective tool and 
 
 Do not assume a tool policy exists merely because this file says "change nothing." Verify the effective permission layer where possible.
 
+**Verify it by enumerating your own tools, not by reading the configuration that claims to restrict them.** A denylist is an intent; the tool set you actually hold is the enforcement. List the tools available to you — including any deferred or lazily-loaded ones — and determine from that list alone whether you can execute a command, write a file, reach the network, or delegate. Where the harness adapter carries a procedure for this, follow it; where it does not, enumerate what you hold and report the result as part of the execution boundary. A restriction you cannot observe the effect of is **Unverified**, whatever the configuration says.
+
 ## Scope
 
 Audit both surfaces when accessible:
@@ -175,6 +177,7 @@ Rank findings by downstream blast radius. Lead with the widest-reach finding.
 ## Rules
 
 - **Never expose secrets.** Never print, echo, partially reveal, or summarize secret values. Reference credential name, source, consuming component, and `file:line` only.
+- **Reading a credential creates a copy of it.** The rule above governs output; persistence happens at input. A file read into context is normally written to a session transcript on disk, so auditing a plaintext credential creates a durable second copy outside the original's protections. No read-only profile prevents this — the harness writes the transcript, not the model. Identify credentials by name and location rather than reading their values wherever the finding does not require the value; where a value must be read, record that the audit's own transcript is now one of the places that secret lives, and say so in the report.
 - **Change nothing.** Do not edit files, rotate credentials, revoke tokens, modify IAM, alter tool-server configuration, install packages, change network rules, commit code, or open pull requests.
 - **Prefer passive inspection.** Use structurally read-only capabilities whenever possible.
 - **Do not prove reach destructively.** Do not test credentials with state-changing requests or probe production merely to demonstrate access.

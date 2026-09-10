@@ -1,7 +1,7 @@
 # Claude Code Adapter
 
 > **Status:** Adapted  
-> **Verification:** Current product documentation checked 2026-09-09. Product-specific paths and setting names are discovery hints and may change.
+> **Verification:** Current product documentation checked 2026-09-09. Tool surface and bypass table verified empirically against a live session 2026-09-10. Product-specific paths and setting names are discovery hints and may change.
 
 Use this adapter when Claude Code is the active harness.
 
@@ -92,6 +92,50 @@ Deny/disallow controls can remove named tools from the model and therefore provi
 If mutation-capable tools remain available, classify the skill's `Report only. Change nothing.` boundary as **Assumed, Not Enforced** unless another deterministic mechanism blocks mutation.
 
 If the skill package is installed with Claude-specific restrictions outside the portable `SKILL.md`, verify that those restrictions are actually active for the current session. Do not infer enforcement from configuration text or documentation alone.
+
+## Verifying the effective tool set
+
+"Verify the effective tool set" is the instruction above; this is the procedure. Do it before the audit, and again after any Claude Code upgrade — the tool surface changes between releases, and a denylist written against an older surface degrades silently.
+
+**From outside the session** (an operator step, in a throwaway print-mode run):
+
+```sh
+claude --settings <your-audit-profile.json> -p \
+  "List every tool you actually have available, including deferred ones. \
+   Then state whether you have any way to execute a shell command, write a \
+   file, reach the network, or delegate to another agent."
+```
+
+Read the answer, not the config. Deny rules remove tools from the model's set entirely, so a correctly restricted session reports the tools as **absent**, not as blocked-by-permission. If the run reports a tool as merely "blocked," the restriction is a prompt and not enforcement.
+
+**From inside the audit,** during Inventory: enumerate your own tools and derive the execution boundary from that list alone. Report it as **Enforced (Observed)** only when no shell, write, egress, or delegation tool is present.
+
+### Bypasses a Bash-shaped denylist misses
+
+Denying `Bash` does not deny execution. Verified against Claude Code as of 2026-09-10:
+
+| Surface | Why it survives | Close it with |
+|---|---|---|
+| `Monitor` | takes an arbitrary shell `command` and runs it in the same environment as `Bash`; its `ws:` option is arbitrary WebSocket egress | deny `Monitor` |
+| `Artifact` | publishes a page to the web — egress in publish shape | deny `Artifact`, or `enableArtifact: false` |
+| Skills / slash commands | can execute inline shell of their own | `disableSkillShellExecution: true` |
+| Hooks | run outside the permission layer entirely; a `PostToolUse` hook shelling out to a formatter is mutation the denylist never sees | `disableAllHooks: true` |
+| Background task tools | can read or stop tasks started elsewhere in the session | deny `TaskOutput`/`TaskStop` if a session may already hold running tasks |
+
+This table is evidence of the general point, not a replacement list to trust. Enumerate; do not assume it is current.
+
+## Auditing a credential without copying it
+
+Claude Code writes session transcripts to `~/.claude/projects/<sanitized-cwd>/*.jsonl`, and a tool result containing a file's contents is written there verbatim. Reading a plaintext credential to audit it therefore creates a second durable copy of that credential on disk, in a file the audit's read-only profile does not protect and does not mention.
+
+This is observable: after a run, the audit's own transcript can be searched for a secret the audit reported on, and found.
+
+Consequences for this adapter:
+
+- Prefer `Grep` for a credential's **variable name** over `Read` of the whole file; cite `file:line` from the match.
+- Where liveness matters, establish it out-of-band — an operator comparing hashes, or a control-plane query the audit itself does not make — rather than reading the value to compare it.
+- Where a value must enter context, treat the transcript as one of the locations that secret now occupies, and name it in the finding's reach.
+- Remediation advice should say so: rotating a credential closes every copy at once, including transcripts and backups nobody enumerated. Deleting discovered copies does not.
 
 ## Cross-harness execution
 
