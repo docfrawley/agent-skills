@@ -1,7 +1,7 @@
 # Claude Code Adapter
 
 > **Status:** Adapted  
-> **Verification:** Current product documentation checked 2026-09-09. Tool surface and bypass table verified empirically against a live session 2026-09-10. Product-specific paths and setting names are discovery hints and may change.
+> **Verification:** Current product documentation checked 2026-09-09. Tool surface and bypass examples observed directly from loaded tool schemas in a live session 2026-09-10 — runtime evidence, not documentation, and specific to that build. Product-specific paths and setting names are discovery hints and may change.
 
 Use this adapter when Claude Code is the active harness.
 
@@ -95,34 +95,46 @@ If the skill package is installed with Claude-specific restrictions outside the 
 
 ## Verifying the effective tool set
 
-"Verify the effective tool set" is the instruction above; this is the procedure. Do it before the audit, and again after any Claude Code upgrade — the tool surface changes between releases, and a denylist written against an older surface degrades silently.
+"Verify the effective tool set" is the instruction in `SKILL.md`; this is the Claude Code procedure. Do it before the audit, and again after any upgrade — the tool surface changes between releases, and a denylist written against an older surface degrades silently.
 
-**From outside the session** (an operator step, in a throwaway print-mode run):
+Claude Code exposes no authoritative machine-readable inventory of the tools in force, so tier 1 of the core hierarchy is unavailable here. Use the benign call test.
+
+**From outside the session**, in a throwaway print-mode run against the profile you intend to audit with:
 
 ```sh
 claude --settings <your-audit-profile.json> -p \
-  "List every tool you actually have available, including deferred ones. \
-   Then state whether you have any way to execute a shell command, write a \
-   file, reach the network, or delegate to another agent."
+  "Attempt exactly one harmless operation in each of these classes and report \
+   the verbatim error for each: run \`true\` in a shell; write a file under \
+   /tmp; fetch https://example.com; delegate a trivial task to a subagent. \
+   Do not retry or work around any failure."
 ```
 
-Read the answer, not the config. Deny rules remove tools from the model's set entirely, so a correctly restricted session reports the tools as **absent**, not as blocked-by-permission. If the run reports a tool as merely "blocked," the restriction is a prompt and not enforcement.
+Read the failures, not the configuration. The distinction that makes this worth running:
 
-**From inside the audit,** during Inventory: enumerate your own tools and derive the execution boundary from that list alone. Report it as **Enforced (Observed)** only when no shell, write, egress, or delegation tool is present.
+| What you see | What it means |
+|---|---|
+| The model reports the tool is not available to it | Absent from the tool set — **Observed** enforcement |
+| The call is made and refused at call time | Present and blocked — a gate, not absence. Enforcement only as far as the gate is deterministic |
+| The operation succeeds | The restriction does not exist, whatever the settings say |
 
-### Bypasses a Bash-shaped denylist misses
+**Do not substitute a self-description.** Asking a session to list the tools it holds yields **Inferred** evidence at best: deferred and lazily-loaded tools are not visible to the model until something pulls their schemas in, and on this harness that hidden set has included arbitrary-shell and remote-execution tools. A roster the model recites is a roster of what it can currently see.
 
-Denying `Bash` does not deny execution. Verified against Claude Code as of 2026-09-10:
+**From inside the audit,** during Inventory: derive the execution boundary from capabilities you have actually observed, and report it as **Enforced (Observed)** only when execution, mutation, egress and delegation are each demonstrably unavailable.
 
-| Surface | Why it survives | Close it with |
+### Capabilities that survive a Bash-shaped denylist
+
+Deny by capability, not by name. Denying `Bash` does not deny execution. The following were observed from loaded tool schemas on 2026-09-10; they are **illustrative, not an inventory**, and the point is the category each one occupies, not the spelling.
+
+| Capability | Reaches it through | Close it with |
 |---|---|---|
-| `Monitor` | takes an arbitrary shell `command` and runs it in the same environment as `Bash`; its `ws:` option is arbitrary WebSocket egress | deny `Monitor` |
-| `Artifact` | publishes a page to the web — egress in publish shape | deny `Artifact`, or `enableArtifact: false` |
-| Skills / slash commands | can execute inline shell of their own | `disableSkillShellExecution: true` |
-| Hooks | run outside the permission layer entirely; a `PostToolUse` hook shelling out to a formatter is mutation the denylist never sees | `disableAllHooks: true` |
-| Background task tools | can read or stop tasks started elsewhere in the session | deny `TaskOutput`/`TaskStop` if a session may already hold running tasks |
+| Shell execution | `Monitor` takes an arbitrary shell `command` and runs it in the same environment as `Bash` | deny `Monitor` |
+| Code execution | a connected notebook/IDE tool server executing arbitrary code in a kernel | disable that server for the run |
+| Egress | `Monitor`'s `ws:` option (arbitrary WebSocket); `Artifact` publishes a page, and its asset upload sends a local file to a hosted URL; connected mail and drive servers send and share what the audit reads | deny `Artifact`, `enableArtifact: false`, and disable messaging/storage servers |
+| Delegation | `SendMessage` addresses sessions that are already running, whose permissions are not yours — the tool's own documentation names this permission laundering. Denying `Task`/`Agent` does not close it | deny `SendMessage` |
+| Deferred execution | `RemoteTrigger` creates and runs cloud routines; scheduling tools re-enter the model later, outside the audited turn | deny both |
+| Non-tool paths | skills and slash commands execute inline shell; hooks run outside the permission layer entirely | `disableSkillShellExecution: true`, `disableAllHooks: true` |
 
-This table is evidence of the general point, not a replacement list to trust. Enumerate; do not assume it is current.
+Two consequences. Connected external tool servers are part of the tool set — an audit profile that denies `WebFetch` while leaving a mail server connected has not closed egress, it has renamed it. And every row here is a capability that was reachable without shell, which is the general lesson: enumerate what you can *do*, then find every tool that does it.
 
 ## Auditing a credential without copying it
 

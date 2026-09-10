@@ -52,33 +52,27 @@ Claude Code — it does not remove the others — so declaring it would create t
 very *looks enforced but is not* boundary this audit exists to find.
 
 If you want the boundary actually enforced, that is an operator step in your
-own permission settings. On Claude Code, deny rules and `disallowed-tools`
-remove named tools from the model's set entirely, so they are real local
-enforcement rather than a prompt.
+own permission settings, and the two Claude Code mechanisms are not
+equivalent. `disallowedTools` removes a tool from the model's set — it is not
+there to call. A permission **deny rule** blocks the call while the tool
+remains in the set. Both are useful; only the first is absence. Tell them apart
+before recording either as enforcement, because "absent," "present but
+refused," and "discouraged in a prompt" are three different boundaries and this
+audit exists to distinguish them.
 
 Deny at minimum `Write`, `Edit`, `NotebookEdit`, `Bash`, `WebFetch`,
 `WebSearch` and `Task`/`Agent` — the last three because an auditor that reads
 credentials must not also be able to send what it reads or delegate around its
 own limits.
 
-**Treat that as a floor, not a set.** These controls are **denylists**, so a
-mutation-capable tool that is newer than this file, or simply unnamed, remains
-available — and the tool surface moves faster than the list. Two that a
-Bash-shaped denylist misses today:
-
-- **`Monitor`** takes an arbitrary shell `command` and runs it in the same
-  environment as `Bash`, plus a `ws:` option for arbitrary WebSocket egress. It
-  survives a `Bash` deny completely.
-- **`Artifact`** publishes a page to the web. An auditor that reads credentials
-  must not hold a publish button.
-
-Shell also re-enters through paths that are not tools: skills and slash
-commands can execute inline shell, and hooks run outside the permission layer
-altogether. On Claude Code, `disableSkillShellExecution` and `disableAllHooks`
-close those.
-
-**So do not trust any list, including this one — verify.** The adapter carries
-the one-command procedure: [Verifying the effective tool
+**Treat that as a floor, not a set, and do not secure by tool name.** These
+controls are denylists, so a capability that is newer than this file, or simply
+unnamed, remains available — and the tool surface moves faster than any list.
+Shell survives a `Bash` deny through other tools, through connected external
+tool servers, through other sessions, and through paths that are not tools at
+all. Enumerate by **execution, mutation, egress, delegation and credential
+use** instead, and verify rather than trust: the adapter carries worked
+examples and the procedure — [Verifying the effective tool
 set](./agent-exposure-audit/harnesses/claude-code.md#verifying-the-effective-tool-set).
 Run it before the audit, and again after any harness upgrade.
 
@@ -86,20 +80,19 @@ Checks that genuinely need shell — repository history for secrets, file
 ownership, symlink resolution — are reported under **Could Not Enumerate**
 naming the narrowest capability that would close each gap.
 
-### Auditing a credential creates a copy of it
+### Auditing a credential can copy it
 
 The audit's no-secrets rule governs its **report**, and the report obeys it:
 findings cite a credential's name, source, consumer and `file:line`, never a
-value. But persistence happens at **input**, not output. Reading a file to
-audit it puts the contents in the model's context, and most harnesses write
-that context to a session transcript on disk — so auditing a plaintext
-credential silently creates a durable second copy of it, outside whatever
-protections the original had.
+value. But persistence happens at **input**, not output. A secret read into
+context may be written to transcripts, logs, caches or telemetry, creating a
+durable copy outside whatever protections the original had. No read-only
+profile prevents it — the harness does the writing, not the model.
 
-No read-only profile prevents this: the harness writes the transcript, not the
-model. Prefer identifying credentials by name and location over reading their
-values, establish liveness out-of-band where you can, and treat the audit's own
-transcript as in-scope when reporting where a secret now lives.
+So the audit can enlarge the set of places a secret exists merely by looking at
+it. The skill carries the rule; each adapter carries what its harness actually
+persists, which is the part you have to know before deciding whether to read a
+value at all.
 
 ## Install
 
