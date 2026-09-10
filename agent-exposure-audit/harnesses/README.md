@@ -26,18 +26,25 @@ Use these terms precisely:
 
 ## Adapter registry
 
-| Harness | Adapter | Status | Verified |
-|---|---|---|---|
-| Claude Code | `claude-code.md` | Adapted | 2026-09-09 |
-| Codex | `codex.md` | Adapted | 2026-09-09 |
-| Cursor | `cursor.md` | Adapted | 2026-09-09 |
-| Pi | `pi.md` | Adapted | 2026-09-09 |
-| OpenCode | `opencode.md` | Adapted | 2026-09-10 |
-| GitHub Copilot | `github-copilot.md` | Adapted | 2026-09-10 |
-| Gemini CLI | `gemini-cli.md` | Adapted | 2026-09-10 |
-| Windsurf | `windsurf.md` | Provisional | Unverified |
+| Harness | Adapter | Status | Evidence | Checked |
+|---|---|---|---|---|
+| Claude Code | `claude-code.md` | Adapted | Documentation, and runtime observation | 2026-09-10 |
+| Codex | `codex.md` | Adapted | Documentation | 2026-09-09 |
+| Cursor | `cursor.md` | Adapted | Documentation | 2026-09-09 |
+| Pi | `pi.md` | Adapted | Documentation | 2026-09-09 |
+| OpenCode | `opencode.md` | Adapted | Documentation | 2026-09-10 |
+| GitHub Copilot | `github-copilot.md` | Adapted | Documentation | 2026-09-10 |
+| Gemini CLI | `gemini-cli.md` | Adapted | Documentation | 2026-09-10 |
+| Windsurf | `windsurf.md` | Provisional | None | — |
 
-A verification date means the adapter was checked against current product documentation on that date. It is evidence of review, not a freshness guarantee.
+**Evidence** is what the adapter's claims rest on, in the same terms the audit uses on anything else:
+
+- **Documentation** — the vendor's account of its own product. It states intent, and it can lag the shipped build in either direction.
+- **Runtime observation** — behavior or tool schemas seen in a live session of that harness. It outranks documentation, because it is the product rather than a description of it, but it is specific to the build observed and ages faster.
+
+**Checked** is the most recent check of any kind. Where an adapter carries both grades, its own header records each date separately; that is the detail this table summarises. A date is evidence of review, not a freshness guarantee, and no adapter's claims are durable across harness upgrades.
+
+Only Claude Code currently carries runtime evidence. That is a statement about where the work has been done, not about the other harnesses — their adapters are documentation-grade and should be read as such.
 
 This registry is intentionally not exhaustive. New harnesses use the core methodology until a tested adapter is contributed.
 

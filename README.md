@@ -30,8 +30,9 @@ It is harness-agnostic. One set of universal capability invariants is the
 method; per-harness discovery hints live in
 [`harnesses/`](./agent-exposure-audit/harnesses) for Claude Code, Codex,
 Cursor, Pi, OpenCode, GitHub Copilot, Gemini CLI and — provisionally, pending
-verification — Windsurf. Each adapter carries the date its product
-documentation was checked. An unknown harness falls back to the invariants
+verification — Windsurf. Each adapter records what its claims rest on —
+documentation, or behavior observed in a live session — and when that was
+last checked. An unknown harness falls back to the invariants
 rather than borrowing another's schema: an adapter tells you where to look,
 the invariants tell you what you are looking for.
 
