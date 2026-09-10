@@ -24,16 +24,40 @@ Every claim is classified **Observed**, **Inferred**, or **Unverified**, and
 findings group as Reachable Now / Over-Scoped / Assumed, Not Enforced /
 Unowned / Could Not Enumerate. It reports and changes nothing.
 
-It declares `allowed-tools: Read, Grep, Glob`, so Claude Code enforces its
-read-only boundary at the tool layer rather than by instruction. No shell, no
-network, no subagent delegation — a tool that reads credentials must not also
-be able to run commands or send what it reads. Checks that genuinely need shell
-(repository history for secrets, file ownership, symlink resolution) are
-reported under **Could Not Enumerate** with the narrowest capability that would
-close the gap, for you to grant deliberately.
+It is harness-agnostic. The method is portable; per-harness discovery hints
+live in [`harnesses/`](./agent-exposure-audit/harnesses) for Claude Code,
+Codex, Cursor and Pi, and an unknown harness falls back to the generic
+capability model rather than borrowing another's schema.
 
-Not a diff review — use the built-in `security-review` for pending branch
-changes.
+**Policy is portable. Capability is inherited. Enforcement is local.**
+
+That applies to the skill itself. Its `Report only. Change nothing.` rule is
+behavioral, and the skill says so: where mutation-capable tools remain
+available it classifies its own boundary as **Assumed, Not Enforced**, exactly
+as it would for anything else it audits.
+
+Not a diff review.
+
+### Enforcing the read-only boundary
+
+The skill deliberately ships no tool-restriction frontmatter, because there is
+no portable one. In particular `allowed-tools` **pre-approves** listed tools in
+Claude Code — it does not remove the others — so declaring it would create the
+very *looks enforced but is not* boundary this audit exists to find.
+
+If you want the boundary actually enforced, that is an operator step in your
+own permission settings. On Claude Code, deny rules and `disallowed-tools` can
+remove named tools from the model. Consider denying at least `Write`, `Edit`,
+`NotebookEdit`, `Bash`, `WebFetch`, `WebSearch` and `Task` for the run — the
+last three because an auditor that reads credentials must not also be able to
+send what it reads or delegate around its own limits.
+
+Note the limit: those controls are **denylists**, so a mutation-capable tool
+installed later, or simply not named, remains available. Verify the effective
+tool set rather than trusting the list. Checks that genuinely need shell —
+repository history for secrets, file ownership, symlink resolution — are
+reported under **Could Not Enumerate** naming the narrowest capability that
+would close each gap.
 
 ## Install
 

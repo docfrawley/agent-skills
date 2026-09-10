@@ -51,71 +51,62 @@ Inspect surfaces that may execute or expose AI components:
 
 When current vulnerability data is available, cross-check identified versions against known vulnerabilities and known-exploited vulnerabilities. Prioritize active exploitation, unauthenticated remote access, credential/code-execution exposure, and downstream reach. Do not rank solely by CVSS.
 
-## Claude Code and MCP inventory
+## Agent-harness inventory
 
-Where accessible, enumerate:
+Identify the active coding-agent or agent-runtime environment where possible. Examples include Claude Code, Codex, Cursor, Pi, and other Agent Skills-compatible harnesses.
 
-- `.mcp.json`
-- `.claude/settings.json`
-- `.claude/settings.local.json`
-- `.claude/agents/`
-- `.claude/hooks/`
-- `.claude/skills/`
-- project plugins
-- `~/.claude.json`
-- `~/.claude/settings.json`
-- managed settings visible to the local installation
-- Claude desktop configuration where present
-- installed Claude Code plugins and skills
+Read `../harnesses/README.md`, then the matching adapter if one exists.
 
-Inspect the effective permission/configuration surface, not only the file where a setting was first found. In current Claude Code versions this commonly includes:
+For every harness inspect, where evidence permits:
 
-- `permissions.allow`
-- `permissions.ask`
-- `permissions.deny`
-- `permissions.defaultMode`, especially `bypassPermissions`
-- `permissions.additionalDirectories`
-- `enableAllProjectMcpServers`
-- `enabledMcpjsonServers`
-- CLI/session overrides such as `--allowedTools`, `--disallowedTools`, `--permission-mode`, and `--add-dir` when observable
+- project-, user-, and managed/global instruction sources
+- skill locations and discovery paths
+- effective tool permissions
+- filesystem reach outside the repository
+- shell/terminal authority
+- network/browser/web authority
+- MCP or other external tool-server configuration
+- hooks, lifecycle automation, or pre/post tool execution
+- agents, subagents, delegation, or background workers
+- plugins/extensions/packages that add authority
+- approval, sandbox, or permission-bypass modes
+- CLI/session overrides
+- inherited environment variables and ambient credentials
+- project trust or workspace trust state
 
-Because settings can merge across scopes and product keys can evolve, verify effective behavior against the installed/current Claude Code configuration rather than assuming one file is authoritative. These names are version-sensitive examples rather than a schema, and a key that is absent is not a finding — see `platform-checks.md`, which states the rule and the underlying capabilities to audit instead.
+Determine the **effective result after scope merging and runtime overrides**, not merely the value in one configuration file.
 
-For each agent definition, inspect tool permissions, wildcard grants such as broad `Bash(...)` patterns, shell access, filesystem reach, MCP access, and whether permissions are project-scoped, user-scoped, or managed.
+Product-specific names are version-sensitive examples, not security facts. Absence of a named key is not a finding. Audit the underlying capability.
 
-For each MCP server record:
+## Tool-server / MCP inventory
+
+For each MCP or equivalent tool server record:
 
 - server name
-- local / remote
-- project-scoped / user-global
+- transport and local / remote status
+- project-scoped / user-global / managed scope
 - command or endpoint
 - connected systems
 - credential or identity mechanism
 - tools exposed
 - read / write / destructive capability
 - network reach
-- whether authorization is externally enforced or merely described
+- whether authorization is externally enforced or merely described by the client
 - evidence confidence
 
-## Hooks, skills, and plugins
+## Hooks, skills, plugins, and extensions
 
-Hooks may execute commands, HTTP requests, prompts, or MCP tools automatically at lifecycle events. Record event, matcher, handler type, command/endpoint/tool, host permissions, inherited environment, network capability, and secrets potentially visible to the process.
+Hooks or lifecycle automation may execute commands, HTTP requests, prompts, or tool calls automatically. Record event/trigger, matcher, handler type, command/endpoint/tool, host permissions, inherited environment, network capability, and secrets potentially visible to the process.
 
-Pay particular attention to lifecycle hooks that execute before or around normal user interaction or tool authorization, including current events such as:
+Inspect installed skills/plugins/extensions for instructions or scripts that:
 
-- `SessionStart`
-- `Setup`
-- `UserPromptSubmit`
-- `PreToolUse`
-- `PermissionRequest`
-- `PostToolUse`
-- `ConfigChange`
-- `InstructionsLoaded`
+- execute shell commands
+- access sensitive paths
+- fetch URLs or use browsers/network tools
+- invoke MCP/tool servers
+- read environment variables or credential stores
+- modify files outside the project
+- install packages/binaries
+- delegate to another agent or process with broader authority
 
-`SessionStart` deserves special attention because it runs when sessions begin or resume and can inject context or persist environment variables before ordinary work proceeds.
-
-Inspect installed skills/plugins for instructions or scripts that execute shell commands, access sensitive paths, fetch URLs, invoke MCP servers, read environment variables, modify files outside the project, or install packages/binaries.
-
-Where supported by the installed version, note settings that suppress skill-initiated shell execution, such as `disableSkillShellExecution`, and whether they are enforced from a scope users cannot override.
-
-Do not assume an installed skill, plugin, hook, or MCP server is trusted merely because it is present.
+Do not assume an installed skill, plugin, hook, extension, or tool server is trusted merely because it is present.

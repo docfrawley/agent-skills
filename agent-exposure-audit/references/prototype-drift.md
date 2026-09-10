@@ -13,11 +13,12 @@ Check for:
 - test utilities imported into production
 - development services referenced by production
 - debug flags reachable in production
-- local MCP servers that became globally available
+- local tool/MCP servers that became globally available
 - credentials created for pilots that remain active
 - long-lived credentials without expiry
 - dependencies floating across major versions
 - abandoned orchestration frameworks still deployed
+- harness plugins, skills, or extensions installed experimentally but now effectively permanent
 
 Do not classify a component as production merely because of its filename. Trace whether a live path imports, invokes, deploys, or depends on it.
 
@@ -29,10 +30,11 @@ Identify live components with unclear ownership. Look for:
 - no identifiable owning team
 - no recent meaningful maintenance
 - infrastructure with no documentation
-- MCP servers or agent integrations configured globally but absent from project documentation
+- tool servers or agent integrations configured globally but absent from project documentation
+- user-level agent extensions that affect many projects but have no explicit owner or review path
 
 Treat lack of ownership as a risk multiplier, not proof of vulnerability.
 
 The important pattern is:
 
-> Nobody explicitly decided this should become infrastructure; it simply became infrastructure.
+> **Nobody explicitly decided this should become infrastructure; it simply became infrastructure.**

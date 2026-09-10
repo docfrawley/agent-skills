@@ -1,10 +1,6 @@
 ---
 name: agent-exposure-audit
-description: "Audits AI and agent exposure across a codebase and, when accessible, the local Claude Code and MCP environment. Inventories AI frameworks, agent runtimes, MCP servers, credentials, and ambient identities; maps downstream reach; and identifies boundaries that are asserted but not enforced. Use for AI/agent security audits, MCP exposure, credential scoping, agent permissions, egress, blast radius, shadow AI infrastructure, prompt-injection reach, and questions about what an agent or framework can reach. Not a diff review — use security-review for pending branch changes."
-allowed-tools:
-  - Read
-  - Grep
-  - Glob
+description: "Audits AI and agent exposure across a codebase and, when accessible, the local agent-harness environment. Inventories AI frameworks, agent runtimes, MCP servers, credentials, ambient identities, hooks, skills, and plugins; maps downstream reach; and identifies boundaries that are asserted but not enforced. Use for AI/agent security audits, MCP exposure, credential scoping, agent permissions, egress, blast radius, shadow AI infrastructure, prompt-injection reach, harness security, or questions about what an agent or framework can reach. Not a diff review."
 ---
 
 # Agent Exposure Audit
@@ -22,10 +18,10 @@ Use this sequence:
 Three principles govern every audit:
 
 1. **Inventory before security.** You cannot secure an agent or framework you do not know exists.
-2. **Reach before severity.** Rank risk by what becomes reachable if a component is compromised or behaves unexpectedly, not CVSS alone.
-3. **Enforcement before intent.** Configuration, prompts, comments, and names describe intended boundaries. Determine what actually enforces them.
+2. **Reach before severity.** Rank risk by what becomes reachable if a component is compromised, manipulated, or behaves unexpectedly, not CVSS alone.
+3. **Enforcement before intent.** Configuration, prompts, comments, policy text, and names describe intended boundaries. Determine what actually enforces them.
 
-The dangerous exposure is often not in the latest diff. It is the framework installed months ago, the credential added to make a pilot work, the globally available MCP server, an inherited cloud role, or a boundary described in configuration but never enforced by infrastructure.
+The dangerous exposure is often not in the latest diff. It is the framework installed months ago, the credential added to make a pilot work, the globally available tool server, an inherited cloud role, or a boundary described in configuration but never enforced by infrastructure.
 
 ## Evidence model
 
@@ -33,13 +29,13 @@ Classify every reach or control claim as:
 
 - **Observed** — directly demonstrated by available code, configuration, or runtime evidence.
 - **Inferred** — strongly implied by available evidence but not independently verified.
-- **Unverified** — determining effective reach or enforcement requires access to an unavailable external system or control plane.
+- **Unverified** — determining effective reach or enforcement requires access to an unavailable external system, control plane, or harness capability.
 
 Never present inferred access as observed access. Never convert configuration intent into a claim about effective permissions.
 
-## Required references
+## Required resources
 
-This skill depends on these files:
+Verify these core files are available before beginning:
 
 - `references/inventory.md`
 - `references/credentials-and-identity.md`
@@ -47,43 +43,34 @@ This skill depends on these files:
 - `references/platform-checks.md`
 - `references/prototype-drift.md`
 - `references/reporting.md`
+- `harnesses/README.md`
 
-Before beginning an audit, verify that all six are available.
+If a required resource is missing or inaccessible, record it under **Could Not Enumerate** and state which part of the audit is affected.
 
-If a required reference is missing or inaccessible, do not silently continue as though the full procedure was performed. Record the missing reference under **Could Not Enumerate** and state which part of the audit is affected.
+Harness adapters under `harnesses/` are conditional. Use the matching adapter when the active harness is identified. If no adapter exists, continue with the generic capability model rather than assuming another harness's schema.
 
 ## Execution boundary
 
 The audit's own behavior must follow the same **enforcement before intent** principle it applies to the target system.
 
-Before inspecting the target, determine the effective Claude Code/tool-permission surface when it is available to inspect. Prefer an execution environment that deterministically blocks mutation: no Edit/Write authority, no state-changing MCP tools, and Bash constrained to specific read-only inspection commands rather than unrestricted shell access.
+**Policy is portable. Capability is inherited. Enforcement is local.**
+
+Before inspecting the target, determine the active harness's effective tool and permission surface where possible. Prefer an execution environment that deterministically blocks mutation and unnecessary egress.
 
 - Do not broaden permissions to make the audit easier.
-- Do not use `bypassPermissions` or equivalent unrestricted modes for this audit.
-- Treat unrestricted Bash, write-capable MCP tools, broad filesystem access, or mutation-capable hooks as authority the audit could theoretically exercise even though this skill instructs the model not to use it.
-- If the environment does not enforce a read-only boundary, continue only with passive operations and record the audit's own mutation boundary as **Assumed, Not Enforced** or **Unverified**, as appropriate.
-- If a necessary inspection cannot be completed without gaining broader authority, put it under **Could Not Enumerate** rather than requesting or exercising unnecessary write capability.
+- Do not use unrestricted or permission-bypass modes for this audit.
+- Treat unrestricted shell, write-capable tools, broad filesystem access, outbound network tools, mutation-capable hooks, or delegated agents as authority the audit could theoretically exercise even though this skill says not to use it.
+- If the environment does not enforce a read-only boundary, continue only with passive operations and record the audit's own mutation/egress boundary as **Assumed, Not Enforced** or **Unverified**, as appropriate.
+- If a necessary inspection cannot be completed without gaining broader authority, put it under **Could Not Enumerate** rather than silently escalating.
 
 Do not assume a tool policy exists merely because this file says "change nothing." Verify the effective permission layer where possible.
-
-### This skill's own boundary
-
-This skill declares `allowed-tools: Read, Grep, Glob` in its frontmatter, which Claude Code enforces at the tool layer while the skill is active. That is a deterministic control rather than an instruction, so it satisfies the standard this section applies to everything else.
-
-Three exclusions are deliberate:
-
-- **No `Bash`.** Unrestricted shell is mutation-capable, so listing it would produce exactly the *looks enforced but is not* boundary this audit exists to find. Checks that genuinely require shell — repository history for secrets, file ownership and mode, resolving symlinks, control-plane queries — are therefore unavailable by default. Record them under **Could Not Enumerate** with the capability needed, and let the operator decide whether to grant it deliberately.
-- **No network tools.** An auditor reads credentials, configuration, and other sensitive material. Give that same context an outbound path and it becomes the pattern this skill warns about: untrusted content plus sensitive reach plus egress. The audit must not be able to send what it reads.
-- **No subagent delegation.** Work handed to another agent may not inherit this tool restriction, which would route around the boundary rather than respect it.
-
-An operator who wants the deeper checks should grant the capability explicitly for that run, not weaken the default that ships to everyone.
 
 ## Scope
 
 Audit both surfaces when accessible:
 
 1. **Application surface** — repository, dependencies, runtime manifests, infrastructure configuration, and production paths.
-2. **Local agent surface** — Claude Code, MCP servers, hooks, skills, agents, plugins, and user-level configuration available on the machine.
+2. **Agent-harness surface** — active coding/agent harness, MCP/tool servers, hooks, skills, agents/subagents, plugins/extensions, approval modes, filesystem reach, network reach, and user/global configuration available to the runtime.
 
 Never silently skip a surface. If a surface cannot be inspected, record it under **Could Not Enumerate**.
 
@@ -100,17 +87,17 @@ Do not imply exhaustive coverage where sampling was used.
 
 ### 1. Inventory first
 
-**Read `references/inventory.md` before beginning this step.** It contains the dependency, runtime, Claude Code, MCP, hook, skill, plugin, and deployment-surface enumeration procedure. These checks are not reproduced here.
+**Read `references/inventory.md` before beginning this step.** It contains dependency, runtime, harness, MCP/tool-server, hook, skill, plugin, and deployment-surface enumeration. These checks are not reproduced here.
 
-Inventory AI frameworks, agent runtimes, MCP servers, hooks, skills, plugins, and runtime infrastructure before beginning risk analysis.
+Identify the active harness if possible. Then **read `harnesses/README.md` and the matching harness adapter** when one exists.
 
-Produce the inventory table first. Incomplete inventory is itself a result.
+Produce the inventory before beginning risk analysis. Incomplete inventory is itself a result.
 
 ### 2. Load relevant platform checks
 
-**Read `references/platform-checks.md` after inventory.** Read only sections relevant to technologies discovered during inventory.
+**Read `references/platform-checks.md` after inventory.** Read only sections relevant to technologies actually discovered.
 
-These checks feed both identity/reach analysis and boundary/enforcement analysis. Do not defer platform-specific checks until the boundary phase.
+These checks feed both identity/reach analysis and boundary/enforcement analysis.
 
 ### 3. Map identity and reach
 
@@ -125,17 +112,17 @@ For every component determine:
 
 ### 4. Test claimed boundaries and hostile-input reach
 
-**Read `references/boundaries-and-egress.md` before beginning this step.** It contains asserted-boundary search, tool-permission checks, sandbox verification, egress analysis, prompt-injection reach, HTTP assumption checks, and dynamic-execution checks. These checks are not reproduced here.
+**Read `references/boundaries-and-egress.md` before beginning this step.** It contains asserted-boundary search, tool-permission checks, sandbox verification, egress analysis, prompt-injection reach, HTTP assumption checks, and dynamic-execution checks.
 
-Find boundaries described as read-only, sandboxed, internal, restricted, safe, isolated, private, allowlisted, or similar. Identify the deterministic mechanism enforcing each claim.
+Find boundaries described as read-only, sandboxed, internal, restricted, safe, isolated, private, allowlisted, approved, or similar. Identify the deterministic mechanism enforcing each claim.
 
 Also identify paths where **untrusted content + sensitive reach + outbound/action capability** coexist, even when no code execution is involved.
 
-If nothing enforces a claimed boundary, that is a finding. If enforcement cannot be verified, report it as **Unverified** rather than treating it as present or absent.
+If nothing enforces a claimed boundary, that is a finding. If enforcement cannot be verified, report it as **Unverified**.
 
 ### 5. Check prototype and ownership drift
 
-**Read `references/prototype-drift.md` before beginning this step.** It contains the prototype-to-production drift and ownership checks. These checks are not reproduced here.
+**Read `references/prototype-drift.md` before beginning this step.** It contains prototype-to-production drift and ownership checks.
 
 Look for experiments that quietly became infrastructure, long-lived pilot credentials, abandoned components, and live systems with unclear ownership.
 
@@ -154,22 +141,24 @@ Do not include secret values.
 
 ### 7. Report
 
-**Read `references/reporting.md` before producing the final report.** It contains ranking rules, finding structure, output categories, enumeration-gap requirements, and report-scaling guidance. These requirements are not reproduced here.
+**Read `references/reporting.md` before producing the final report.** It contains ranking rules, finding structure, output categories, enumeration-gap requirements, and report-scaling guidance.
 
 Rank findings by downstream blast radius. Lead with the widest-reach finding.
 
 ## Rules
 
 - **Never expose secrets.** Never print, echo, partially reveal, or summarize secret values. Reference credential name, source, consuming component, and `file:line` only.
-- **Change nothing.** Do not edit files, rotate credentials, revoke tokens, modify IAM, alter MCP configuration, install packages, change network rules, commit code, or open pull requests.
-- **Prefer passive inspection.** Use read-only commands and static analysis whenever possible.
+- **Change nothing.** Do not edit files, rotate credentials, revoke tokens, modify IAM, alter tool-server configuration, install packages, change network rules, commit code, or open pull requests.
+- **Prefer passive inspection.** Use structurally read-only capabilities whenever possible.
 - **Do not prove reach destructively.** Do not test credentials with state-changing requests or probe production merely to demonstrate access.
 - **Inventory before conclusions.** Establish what exists before beginning vulnerability analysis.
 - **Prefer reach over severity.** Downstream authority matters more than a severity label alone.
-- **Distinguish intent from enforcement.** A prompt, comment, variable name, or application setting is not a deterministic security boundary.
+- **Distinguish intent from enforcement.** A prompt, comment, variable name, approval description, or application setting is not a deterministic security boundary.
 - **State uncertainty precisely.** An unverified control is neither absent nor present until evidence establishes which.
-- **Absence of evidence is a result, not proof of absence.** Say “No egress restriction found in the available configuration,” not “No egress restriction exists.”
+- **Absence of evidence is a result, not proof of absence.** Say "No egress restriction found in the available configuration," not "No egress restriction exists."
 - **Do not overclaim completeness.** A repo or local-machine audit cannot prove organization-wide absence of shadow AI infrastructure.
+- **Do not assume harness equivalence.** Tool names, config keys, hook events, permission semantics, and skill locations vary by harness and version.
+- **Do not assume permission portability.** When a skill, plugin, or instruction package is discovered from another harness's directory or compatibility path, determine what authority it inherits in the current harness. The originating harness's restrictions do not automatically transfer.
 
 ## Audit heuristic
 
@@ -179,8 +168,9 @@ When uncertain where to spend investigation time, ask in this order:
 2. What identity does it run as?
 3. What can that identity reach?
 4. What untrusted input can influence it?
-5. What is it supposed to be prevented from doing?
-6. What deterministic mechanism enforces that boundary?
-7. Who owns the component and credential?
+5. If this skill, agent, or plugin crossed harnesses, what authority did it acquire here?
+6. What is it supposed to be prevented from doing?
+7. What deterministic mechanism enforces that boundary?
+8. Who owns the component and credential?
 
 The audit is complete when these questions are answered where evidence permits and explicitly marked **Unverified** where they do not.

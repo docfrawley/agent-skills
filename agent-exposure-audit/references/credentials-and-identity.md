@@ -11,7 +11,7 @@ Inspect, where relevant:
 - `.env`, `.env.*`, `.envrc`
 - settings modules and Pydantic `BaseSettings`
 - `config/`
-- CI/CD configuration and `.github/workflows/*.yml`
+- CI/CD configuration and workflow files
 - Docker `ENV` / `ARG`
 - Compose `environment:` and `secrets:`
 - Kubernetes secrets, service accounts, workload identities
@@ -20,13 +20,14 @@ Inspect, where relevant:
 - credential mounts
 - secret-manager references
 - parent-process environment inheritance
+- harness-specific credential stores or auth sessions
 
 Never print secret values.
 
 For every credential or identity record:
 
 - credential/identity name
-- consuming process
+- consuming process or agent
 - source
 - explicit or ambient
 - intended purpose
@@ -50,7 +51,9 @@ Do not limit the audit to explicit keys. Check for authority inherited through:
 - credential helpers
 - parent-process environment
 - local cloud CLI sessions
-- GitHub CLI authentication
+- source-control CLI authentication
+- harness login/session state
+- IDE or desktop-app credential brokers
 
 An agent may hold no visible secret and still possess broad authority.
 
@@ -68,7 +71,7 @@ Determine read/write/DDL capability, environment, tenant isolation, reachable sc
 
 ### Model providers
 
-Determine organization-level vs project-scoped key, spend limits, model restrictions, data-access implications, administrative capability, and access to provider-side files or other stored resources where relevant.
+Determine organization-level vs project-scoped key, spend limits, model restrictions, data-access implications, administrative capability, and access to provider-side files or stored resources where relevant.
 
 ### Source control
 
@@ -82,9 +85,11 @@ The code path demonstrates usage, not necessarily the limit of authority.
 
 ## Secret history
 
-Inspect both working tree and version-control history for credential exposure. Prefer `gitleaks` or `trufflehog` when already available. Do not install tools automatically.
+Inspect both working tree and version-control history for credential exposure when the current execution boundary permits it.
 
-If unavailable, use targeted read-only repository-history inspection for likely secret patterns.
+Prefer existing secret-scanning tools when already available. Do not install tools automatically.
+
+If repository-history inspection requires a capability the audit does not have, record it under **Could Not Enumerate** rather than broadening authority.
 
 Distinguish:
 
