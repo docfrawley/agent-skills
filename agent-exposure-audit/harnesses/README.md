@@ -1,65 +1,77 @@
-# Harness Adapters
+# Harness adapters
 
-Read this index after inventory identifies the active coding-agent or agent-runtime environment.
+Harness adapters provide product-specific discovery hints for the portable Agent Exposure Audit.
 
-## Purpose
+They are **not** a support boundary.
 
-The core audit is harness-agnostic. Adapters provide **discovery hints and product-specific enforcement checks**, not a different security model.
+> **An adapter improves enumeration. It does not define the methodology.**
 
-The invariant questions are always:
+The core audit remains:
 
-- What instructions and skills are loaded?
-- What tools can the harness invoke?
-- What filesystem can it reach?
-- Can it execute shell/terminal commands?
-- Can it reach the network or browser?
-- What MCP/tool servers are enabled?
-- What hooks or automatic execution paths exist?
-- Can it delegate to other agents/processes?
-- What credentials and ambient identities does it inherit?
-- What approval/sandbox mechanism is supposed to constrain it?
-- What deterministic mechanism actually enforces those constraints?
+**Inventory → Identity → Reach → Boundary → Enforcement → Ownership**
 
-## Available adapters
+and applies even when no adapter exists.
 
-- `claude-code.md`
-- `codex.md`
-- `cursor.md`
-- `pi.md`
+## Compatibility model
 
-Read only the adapter(s) relevant to the environment actually discovered.
+Use these terms precisely:
 
-## Unknown harnesses
+| Level | Meaning |
+|---|---|
+| **Portable** | The core audit can run without harness-specific assumptions. |
+| **Adapted** | This package includes product-specific discovery and enforcement guidance for the harness. |
+| **Native Agent Skills** | Current authoritative documentation confirms the harness can discover/load `SKILL.md` Agent Skills. |
+| **Generic fallback** | No verified adapter or native skill path is available; audit effective capabilities directly. |
+| **Translatable** | The methodology applies, but the environment may require its own rules/instructions format rather than native Agent Skills loading. |
 
-If no adapter exists:
+## Adapter registry
 
-1. Do not substitute another harness's configuration names.
-2. Inspect the generic capabilities above using available files, runtime metadata, help output, or authoritative local/current documentation.
-3. Classify product-specific controls as **Unverified** where they cannot be established.
-4. Continue the application-side audit normally.
+| Harness | Adapter | Status | Verified |
+|---|---|---|---|
+| Claude Code | `claude-code.md` | Adapted | 2026-09-09 |
+| Codex | `codex.md` | Adapted | 2026-09-09 |
+| Cursor | `cursor.md` | Adapted | 2026-09-09 |
+| Pi | `pi.md` | Adapted | 2026-09-09 |
+| OpenCode | `opencode.md` | Adapted | 2026-09-10 |
+| GitHub Copilot | `github-copilot.md` | Adapted | 2026-09-10 |
+| Gemini CLI | `gemini-cli.md` | Adapted | 2026-09-10 |
+| Windsurf | `windsurf.md` | Provisional | Unverified |
 
+A verification date means the adapter was checked against current product documentation on that date. It is evidence of review, not a freshness guarantee.
+
+This registry is intentionally not exhaustive. New harnesses use the core methodology until a tested adapter is contributed.
+
+## Generic fallback
+
+If the active harness has no adapter, **continue the audit using the portable invariants and workflow in `SKILL.md`**.
+
+Do not duplicate or invent product-specific schemas. Record product-specific controls as **Observed**, **Inferred**, or **Unverified** using the normal evidence model.
 
 ## Cross-harness authority
 
-A portable skill can be discovered or executed by a different harness than the one it was authored for. Treat that transition as an authority boundary.
+Portable instructions do not imply portable permissions.
 
-Ask:
+Whenever a skill can be discovered from a neutral directory such as `.agents/skills/`, from another harness's compatibility directory, or through an import/link mechanism, ask:
 
 > **What authority did this skill acquire when it crossed harnesses?**
 
-When a skill is loaded from another harness's directory, compatibility path, plugin bundle, or shared `.agents/skills/` location:
+Compare, where evidence permits:
 
-- do not assume the originating harness's allow/deny rules transfer
-- do not assume the same filesystem, shell, network, MCP, approval, hook, or delegation semantics apply
-- determine the effective capability set in the **current** harness
-- classify unavailable permission semantics as **Unverified** rather than borrowing another adapter's model
+- source harness or expected capability model
+- current harness
+- filesystem scope
+- shell authority
+- network authority
+- MCP/tool access
+- automatic execution
+- delegation
+- approval requirements
+- inherited credentials
+
+A skill that was read-only in one runtime may not be read-only in another.
 
 ## Version drift
 
-Every adapter is a set of examples, not a permanent schema. Harnesses change quickly.
+Paths, setting names, hook names, and permission semantics change.
 
-- Verify key names, hook names, discovery locations, approval modes, and precedence against the installed version or current authoritative documentation where possible.
-- Failure to find an example key is **not itself a finding**.
-- Audit the underlying capability rather than the spelling of a setting.
-
-**Policy is portable. Capability is inherited. Enforcement is local.**
+Adapter-specific names are discovery hints, not permanent schema. Verify them against the installed version or current authoritative documentation when possible. Failure to find an example key is not itself a finding; audit the underlying capability.

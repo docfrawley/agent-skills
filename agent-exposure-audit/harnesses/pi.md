@@ -1,5 +1,8 @@
 # Pi Adapter
 
+> **Status:** Adapted  
+> **Verification:** Current product documentation checked 2026-09-09. Product-specific paths and setting names are discovery hints and may change.
+
 Use this adapter when Pi is the active harness.
 
 Pi documents the Agent Skills standard and supports both native Pi skill locations and neutral `.agents/skills/` locations. Verify paths and settings against the installed version when possible.

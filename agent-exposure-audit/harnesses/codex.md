@@ -1,5 +1,8 @@
 # Codex Adapter
 
+> **Status:** Adapted  
+> **Verification:** Current product documentation checked 2026-09-09. Product-specific paths and setting names are discovery hints and may change.
+
 Use this adapter when OpenAI Codex is the active harness.
 
 OpenAI supports Agent Skills in Codex, but local discovery locations, app/CLI/IDE behavior, approval controls, and config details can change. Treat every path/key below as a discovery hint and verify against the installed/current Codex runtime or authoritative documentation.

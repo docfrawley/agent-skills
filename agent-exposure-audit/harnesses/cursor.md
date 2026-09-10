@@ -1,5 +1,8 @@
 # Cursor Adapter
 
+> **Status:** Adapted  
+> **Verification:** Current product documentation checked 2026-09-09. Product-specific paths and setting names are discovery hints and may change.
+
 Use this adapter when Cursor Agent or Cursor Cloud Agents are the active harness.
 
 Cursor documents Agent Skills as an open standard and currently discovers skills from native Cursor and neutral `.agents` locations, with compatibility for Claude and Codex skill directories. Treat paths as version-sensitive and verify current behavior when possible.

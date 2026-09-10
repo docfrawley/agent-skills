@@ -23,6 +23,25 @@ Three principles govern every audit:
 
 The dangerous exposure is often not in the latest diff. It is the framework installed months ago, the credential added to make a pilot work, the globally available tool server, an inherited cloud role, or a boundary described in configuration but never enforced by infrastructure.
 
+## Universal capability invariants
+
+Regardless of harness, determine:
+
+- What instructions are loaded?
+- What filesystem can it reach?
+- What can it execute?
+- What network paths can it use?
+- What external tools or MCP servers can it invoke?
+- What credentials or identities does it inherit?
+- What executes automatically?
+- What can it delegate?
+- What requires approval?
+- What actually enforces those boundaries?
+
+**Adapters tell you where to look. These questions tell you what you're looking for.**
+
+**Policy is portable. Capability is inherited. Enforcement is local.**
+
 ## Evidence model
 
 Classify every reach or control claim as:
@@ -47,13 +66,15 @@ Verify these core files are available before beginning:
 
 If a required resource is missing or inaccessible, record it under **Could Not Enumerate** and state which part of the audit is affected.
 
-Harness adapters under `harnesses/` are conditional. Use the matching adapter when the active harness is identified. If no adapter exists, continue with the generic capability model rather than assuming another harness's schema.
+Harness adapters under `harnesses/` are conditional. Use the matching adapter when the active harness is identified.
+
+**An adapter improves enumeration. It does not define the methodology.**
+
+If no adapter exists, continue with the generic capability model rather than assuming another harness's schema. Absence of an adapter is not an inability to audit.
 
 ## Execution boundary
 
 The audit's own behavior must follow the same **enforcement before intent** principle it applies to the target system.
-
-**Policy is portable. Capability is inherited. Enforcement is local.**
 
 Before inspecting the target, determine the active harness's effective tool and permission surface where possible. Prefer an execution environment that deterministically blocks mutation and unnecessary egress.
 
@@ -90,6 +111,12 @@ Do not imply exhaustive coverage where sampling was used.
 **Read `references/inventory.md` before beginning this step.** It contains dependency, runtime, harness, MCP/tool-server, hook, skill, plugin, and deployment-surface enumeration. These checks are not reproduced here.
 
 Identify the active harness if possible. Then **read `harnesses/README.md` and the matching harness adapter** when one exists.
+
+If the skill, instructions, or resources originated in a different harness or neutral skill directory, explicitly ask:
+
+> **What authority did this skill acquire when it crossed harnesses?**
+
+Do not assume filesystem, shell, network, MCP, hook, approval, delegation, or credential restrictions transfer with a portable skill.
 
 Produce the inventory before beginning risk analysis. Incomplete inventory is itself a result.
 
@@ -158,7 +185,7 @@ Rank findings by downstream blast radius. Lead with the widest-reach finding.
 - **Absence of evidence is a result, not proof of absence.** Say "No egress restriction found in the available configuration," not "No egress restriction exists."
 - **Do not overclaim completeness.** A repo or local-machine audit cannot prove organization-wide absence of shadow AI infrastructure.
 - **Do not assume harness equivalence.** Tool names, config keys, hook events, permission semantics, and skill locations vary by harness and version.
-- **Do not assume permission portability.** When a skill, plugin, or instruction package is discovered from another harness's directory or compatibility path, determine what authority it inherits in the current harness. The originating harness's restrictions do not automatically transfer.
+- **Do not assume permission portability.** A portable skill can acquire different authority when loaded by another harness. Audit the effective capability set in the current runtime.
 
 ## Audit heuristic
 

@@ -1,5 +1,8 @@
 # Claude Code Adapter
 
+> **Status:** Adapted  
+> **Verification:** Current product documentation checked 2026-09-09. Product-specific paths and setting names are discovery hints and may change.
+
 Use this adapter when Claude Code is the active harness.
 
 Configuration names are version-sensitive examples. Verify against the installed/current Claude Code version when possible.

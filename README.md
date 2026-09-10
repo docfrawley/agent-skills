@@ -3,7 +3,7 @@
 Skills in the [Agent Skills](https://code.claude.com/docs/en/skills) format —
 one directory per skill, each holding a `SKILL.md` and whatever references it
 loads. The format is supported across harnesses, including Claude Code, Codex,
-Cursor and Pi.
+Cursor, Pi, OpenCode, GitHub Copilot and Gemini CLI.
 
 ## Skills
 
@@ -26,10 +26,14 @@ Every claim is classified **Observed**, **Inferred**, or **Unverified**, and
 findings group as Reachable Now / Over-Scoped / Assumed, Not Enforced /
 Unowned / Could Not Enumerate. It reports and changes nothing.
 
-It is harness-agnostic. The method is portable; per-harness discovery hints
-live in [`harnesses/`](./agent-exposure-audit/harnesses) for Claude Code,
-Codex, Cursor and Pi, and an unknown harness falls back to the generic
-capability model rather than borrowing another's schema.
+It is harness-agnostic. One set of universal capability invariants is the
+method; per-harness discovery hints live in
+[`harnesses/`](./agent-exposure-audit/harnesses) for Claude Code, Codex,
+Cursor, Pi, OpenCode, GitHub Copilot, Gemini CLI and — provisionally, pending
+verification — Windsurf. Each adapter carries the date its product
+documentation was checked. An unknown harness falls back to the invariants
+rather than borrowing another's schema: an adapter tells you where to look,
+the invariants tell you what you are looking for.
 
 **Policy is portable. Capability is inherited. Enforcement is local.**
 
