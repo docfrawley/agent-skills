@@ -1,7 +1,9 @@
-# claude-skills
+# agent-skills
 
-Agent skills for [Claude Code](https://claude.com/claude-code). One directory
-per skill, each holding a `SKILL.md` and whatever references it loads.
+Skills in the [Agent Skills](https://code.claude.com/docs/en/skills) format —
+one directory per skill, each holding a `SKILL.md` and whatever references it
+loads. The format is supported across harnesses, including Claude Code, Codex,
+Cursor and Pi.
 
 ## Skills
 
@@ -61,20 +63,30 @@ would close each gap.
 
 ## Install
 
-Clone anywhere, then symlink each skill you want into `~/.claude/skills/`:
+Clone anywhere, then symlink each skill you want into the location your
+harness reads:
 
 ```sh
-git clone https://github.com/docfrawley/claude-skills.git ~/projects/claude-skills
-ln -s ~/projects/claude-skills/agent-exposure-audit ~/.claude/skills/agent-exposure-audit
+git clone https://github.com/docfrawley/agent-skills.git ~/projects/agent-skills
+
+# Claude Code
+ln -s ~/projects/agent-skills/agent-exposure-audit ~/.claude/skills/agent-exposure-audit
+
+# Neutral location, read by Cursor, Pi and others
+ln -s ~/projects/agent-skills/agent-exposure-audit ~/.agents/skills/agent-exposure-audit
 ```
 
 Symlinking rather than copying keeps the repo the single source of truth —
 editing a skill and committing it are the same act, so the installed copy
 cannot drift.
 
-Skills in `~/.claude/skills/` are available in every project. For a skill that
-should only apply to one repo, symlink it into that repo's `.claude/skills/`
-instead.
+A skill in a user-level directory is available in every project. To scope one
+to a single repo, symlink it into that repo's skills directory instead.
+
+**Installing a skill does not carry a permission model with it.** Whatever
+sandbox, approval mode, filesystem scope or tool policy applied where a skill
+was authored, it inherits the authority of the harness running it. That is the
+audit's own subject, and it applies to the audit.
 
 ## License
 
