@@ -1,8 +1,8 @@
 # Boundaries, Containment, and Egress
 
-Read this reference when directed by `SKILL.md` for boundary, containment, and egress analysis.
+Read this reference when directed by `SKILL.md` for boundary, containment, egress, and hostile-input analysis.
 
-The goal is to find where a security boundary is **described** and determine what actually enforces it.
+The goal is to find where a security boundary is **described** and determine what actually enforces it — including cases where no code execution is required for an attacker to exploit agent authority.
 
 ## Asserted boundaries
 
@@ -32,6 +32,39 @@ Determine whether restrictions are enforced by runtime permissions, MCP/server a
 
 Prompt-level restrictions are behavioral guidance, not deterministic security controls.
 
+Pay special attention to combinations of individually legitimate tools that create broader authority when composed: read-sensitive-data + network egress, source-control write + CI secrets, filesystem read + external messaging, or browser/retrieval access + privileged actions.
+
+## Prompt injection and hostile-content reach
+
+Treat prompt injection as a **reach problem**, not only a prompt-quality problem.
+
+The key pattern is:
+
+> **Untrusted content + sensitive reach + outbound/action capability = prompt-injection blast radius**
+
+Look for agents that ingest content controlled outside the relevant trust boundary, including:
+
+- web pages and search results
+- retrieved documents and RAG corpora
+- email, chat, tickets, issue bodies, PR text, and comments
+- MCP tool results or remote MCP content
+- uploaded files
+- database records editable by less-trusted users
+- third-party API responses
+- generated or user-supplied documentation/instructions
+
+For each path ask:
+
+1. Can untrusted content become model context or otherwise influence planning/tool selection?
+2. At that moment, what sensitive data, credentials, tools, or identities are available to the agent?
+3. Does the agent have an outbound or state-changing path: network requests, messaging, source-control writes, cloud actions, database writes, browser actions, MCP tools, or shell commands?
+4. What deterministic control prevents hostile content from causing disclosure or action?
+5. Is that control enforced outside the model, or is the system relying primarily on instructions such as “ignore malicious prompts”?
+
+Do not require `eval`, shell execution, or arbitrary code execution before treating this as material exposure. A manipulated agent can misuse legitimate tools and permissions.
+
+Where possible, identify trust transitions explicitly: **untrusted content → model context → privileged identity/tool → downstream system**.
+
 ## Sandbox claims
 
 If code claims to be sandboxed, look for actual isolation mechanisms such as containers/VMs, separate OS users, filesystem namespaces, seccomp, capability dropping, resource limits, network namespaces, restricted mounts, and ephemeral environments.
@@ -47,6 +80,8 @@ Determine whether agent processes can connect to arbitrary destinations. Inspect
 Distinguish application intent from network enforcement.
 
 Treat allowlisted destinations as **capability grants**. For each, consider what functions are reachable through that destination and whether attacker-controlled inputs, credentials, redirects, alternate hosts, or proxy behavior expand effective capability.
+
+For an agent that can read sensitive data, egress itself can be the final step of a prompt-injection attack even when the process never executes attacker-supplied code.
 
 ## HTTP assumptions
 

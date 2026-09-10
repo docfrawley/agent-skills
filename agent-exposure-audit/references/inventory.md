@@ -64,10 +64,24 @@ Where accessible, enumerate:
 - project plugins
 - `~/.claude.json`
 - `~/.claude/settings.json`
+- managed settings visible to the local installation
 - Claude desktop configuration where present
 - installed Claude Code plugins and skills
 
-For each agent definition, inspect tool permissions, wildcard grants, shell access, filesystem reach, MCP access, and whether permissions are project-scoped or global.
+Inspect the effective permission/configuration surface, not only the file where a setting was first found. In current Claude Code versions this commonly includes:
+
+- `permissions.allow`
+- `permissions.ask`
+- `permissions.deny`
+- `permissions.defaultMode`, especially `bypassPermissions`
+- `permissions.additionalDirectories`
+- `enableAllProjectMcpServers`
+- `enabledMcpjsonServers`
+- CLI/session overrides such as `--allowedTools`, `--disallowedTools`, `--permission-mode`, and `--add-dir` when observable
+
+Because settings can merge across scopes and product keys can evolve, verify effective behavior against the installed/current Claude Code configuration rather than assuming one file is authoritative. These names are version-sensitive examples rather than a schema, and a key that is absent is not a finding — see `platform-checks.md`, which states the rule and the underlying capabilities to audit instead.
+
+For each agent definition, inspect tool permissions, wildcard grants such as broad `Bash(...)` patterns, shell access, filesystem reach, MCP access, and whether permissions are project-scoped, user-scoped, or managed.
 
 For each MCP server record:
 
@@ -85,8 +99,23 @@ For each MCP server record:
 
 ## Hooks, skills, and plugins
 
-Hooks may execute commands on the host outside the conversational permission model. Record trigger, command/script, host permissions, inherited environment, network capability, and secrets potentially visible to the process.
+Hooks may execute commands, HTTP requests, prompts, or MCP tools automatically at lifecycle events. Record event, matcher, handler type, command/endpoint/tool, host permissions, inherited environment, network capability, and secrets potentially visible to the process.
+
+Pay particular attention to lifecycle hooks that execute before or around normal user interaction or tool authorization, including current events such as:
+
+- `SessionStart`
+- `Setup`
+- `UserPromptSubmit`
+- `PreToolUse`
+- `PermissionRequest`
+- `PostToolUse`
+- `ConfigChange`
+- `InstructionsLoaded`
+
+`SessionStart` deserves special attention because it runs when sessions begin or resume and can inject context or persist environment variables before ordinary work proceeds.
 
 Inspect installed skills/plugins for instructions or scripts that execute shell commands, access sensitive paths, fetch URLs, invoke MCP servers, read environment variables, modify files outside the project, or install packages/binaries.
 
-Do not assume an installed skill or plugin is trusted merely because it is present.
+Where supported by the installed version, note settings that suppress skill-initiated shell execution, such as `disableSkillShellExecution`, and whether they are enforced from a scope users cannot override.
+
+Do not assume an installed skill, plugin, hook, or MCP server is trusted merely because it is present.

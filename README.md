@@ -24,6 +24,14 @@ Every claim is classified **Observed**, **Inferred**, or **Unverified**, and
 findings group as Reachable Now / Over-Scoped / Assumed, Not Enforced /
 Unowned / Could Not Enumerate. It reports and changes nothing.
 
+It declares `allowed-tools: Read, Grep, Glob`, so Claude Code enforces its
+read-only boundary at the tool layer rather than by instruction. No shell, no
+network, no subagent delegation — a tool that reads credentials must not also
+be able to run commands or send what it reads. Checks that genuinely need shell
+(repository history for secrets, file ownership, symlink resolution) are
+reported under **Could Not Enumerate** with the narrowest capability that would
+close the gap, for you to grant deliberately.
+
 Not a diff review — use the built-in `security-review` for pending branch
 changes.
 
