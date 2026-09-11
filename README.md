@@ -20,27 +20,30 @@ This is an on-demand audit of what your agent environment — and the repository
 it works in — can actually reach: MCP servers, hooks, skills, plugins,
 credentials, and the identities they inherit.
 
-#### What a first run turns up
+#### What it looks for
 
-From one run against a working internal application, all of it pre-existing and
-none of it in a diff:
+Not vulnerabilities in your code — authority in your environment. The recurring
+shapes, all of them seen in practice and none of them in a diff:
 
-- **four live cloud credentials embedded in the agent's own permission
-  allowlist**, pasted in so a command would run without prompting
-- an allowlist grown to 240 rules, a third of them dead — including `curl *`,
-  `cat *` and read access to the entire home directory, so any untrusted text
-  reaching the model had a read-and-exfiltrate path through pre-approved shell
-- a dead code path conflating the model API key with the application's own
-  bearer secret
-- a service credential scoped to everything one person could read, where the
-  application needed a single folder
-- a tool server referenced by checked-in config, living in one developer's home
-  directory, importing modules the application deleted months earlier
+- **live credentials embedded in the agent's own permission rules**, pasted in
+  so a command would stop prompting, and never taken back out
+- **allowlists grown past anyone's ability to read them**, carrying wildcards
+  like `curl *`, `cat *`, or read access to an entire home directory — so
+  untrusted text reaching the model has a read-and-exfiltrate path through
+  pre-approved shell
+- **secrets doing double duty** — a model API key also serving as an
+  application's bearer token, where a token comparison leak becomes a model-key
+  leak
+- **service credentials scoped to a person's full access** where the
+  application needed one folder, because delegated auth was the quickest thing
+  that worked
+- **tool servers nobody owns** — referenced by checked-in configuration, living
+  in one developer's home directory, importing code the application deleted
+  months ago
 
-The repository itself was fine. Production was correctly locked down, and the
-one production finding resolved as a non-issue on verification. **The exposure
-was in the agent's operating environment** — which is the surface nothing else
-looks at.
+Do not be surprised when the repository and the production configuration come
+back clean and the findings cluster in the agent's operating environment. That
+is the surface nothing else looks at.
 
 #### How it works
 
