@@ -5,7 +5,9 @@ description: "Audits AI and agent exposure across a codebase and, when accessibl
 
 # Agent Exposure Audit
 
-An on-demand audit of AI and agent exposure across a repository and, when accessible, the local agent environment.
+An on-demand audit of AI and agent exposure across the local agent environment and the repository it works in.
+
+Both surfaces matter, but do not assume the repository is where the exposure is. An agent environment accumulates authority silently — credentials added to make one command work, permission rules approved once and never revisited, tool servers enabled for a pilot and never removed. None of it appears in a diff, and nothing else audits it.
 
 **Report only. Change nothing.**
 

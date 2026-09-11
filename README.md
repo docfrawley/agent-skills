@@ -9,9 +9,40 @@ Cursor, Pi, OpenCode, GitHub Copilot and Gemini CLI.
 
 ### [`agent-exposure-audit`](./agent-exposure-audit)
 
-An on-demand audit of AI and agent exposure across a repository and, where
-accessible, the local agent environment — MCP servers, hooks, skills, plugins,
+**Your coding agent inherits every credential your shell holds, every
+permission you ever approved, and every tool server you once enabled — and
+nothing audits that accumulation.** It grows one *yes to all* at a time, with
+no commit, no review and no expiry date. The dangerous exposure is rarely in
+the diff you are reviewing. It is the allowlist entry you added eighteen months
+ago to make one command work.
+
+This is an on-demand audit of what your agent environment — and the repository
+it works in — can actually reach: MCP servers, hooks, skills, plugins,
 credentials, and the identities they inherit.
+
+#### What a first run turns up
+
+From one run against a working internal application, all of it pre-existing and
+none of it in a diff:
+
+- **four live cloud credentials embedded in the agent's own permission
+  allowlist**, pasted in so a command would run without prompting
+- an allowlist grown to 240 rules, a third of them dead — including `curl *`,
+  `cat *` and read access to the entire home directory, so any untrusted text
+  reaching the model had a read-and-exfiltrate path through pre-approved shell
+- a dead code path conflating the model API key with the application's own
+  bearer secret
+- a service credential scoped to everything one person could read, where the
+  application needed a single folder
+- a tool server referenced by checked-in config, living in one developer's home
+  directory, importing modules the application deleted months earlier
+
+The repository itself was fine. Production was correctly locked down, and the
+one production finding resolved as a non-issue on verification. **The exposure
+was in the agent's operating environment** — which is the surface nothing else
+looks at.
+
+#### How it works
 
 It follows one sequence — **Inventory → Identity → Reach → Boundary →
 Enforcement → Ownership** — on three principles:
