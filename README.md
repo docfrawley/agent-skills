@@ -9,21 +9,19 @@ Cursor, Pi, OpenCode, GitHub Copilot and Gemini CLI.
 
 ### [`agent-exposure-audit`](./agent-exposure-audit)
 
-**Your coding agent inherits every credential your shell holds, every
-permission you ever approved, and every tool server you once enabled — and
-nothing audits that accumulation.** It grows one *yes to all* at a time, with
-no commit, no review and no expiry date. The dangerous exposure is rarely in
-the diff you are reviewing. It is the allowlist entry you added eighteen months
-ago to make one command work.
+**Coding agents accumulate authority that never appears in a code diff** —
+inherited credentials, permissions approved once for an earlier task, tool
+servers enabled for a pilot, hooks that run outside the permission layer. It
+grows one *yes* at a time, with no commit, no review and no expiry date.
 
-This is an on-demand audit of what your agent environment — and the repository
-it works in — can actually reach: MCP servers, hooks, skills, plugins,
-credentials, and the identities they inherit.
+This is an on-demand audit of what that accumulation can actually reach: your
+agent environment first, and the repository it works in — MCP servers, hooks,
+skills, plugins, credentials, and the identities they inherit.
 
 #### What it looks for
 
 Not vulnerabilities in your code — authority in your environment. The recurring
-shapes, all of them seen in practice and none of them in a diff:
+shapes, none of which appear in a diff:
 
 - **live credentials embedded in the agent's own permission rules**, pasted in
   so a command would stop prompting, and never taken back out
@@ -41,9 +39,9 @@ shapes, all of them seen in practice and none of them in a diff:
   in one developer's home directory, importing code the application deleted
   months ago
 
-Do not be surprised when the repository and the production configuration come
-back clean and the findings cluster in the agent's operating environment. That
-is the surface nothing else looks at.
+Do not be surprised if the repository and the production configuration come
+back clean while the findings cluster in the agent's operating environment.
+That is the surface your existing tooling was not built to see.
 
 #### How it works
 
