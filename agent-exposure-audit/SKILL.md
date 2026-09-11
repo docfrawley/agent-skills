@@ -1,11 +1,13 @@
 ---
 name: agent-exposure-audit
-description: "Audits AI and agent exposure across a codebase and, when accessible, the local agent-harness environment. Inventories AI frameworks, agent runtimes, MCP servers, credentials, ambient identities, hooks, skills, and plugins; maps downstream reach; and identifies boundaries that are asserted but not enforced. Use for AI/agent security audits, MCP exposure, credential scoping, agent permissions, egress, blast radius, shadow AI infrastructure, prompt-injection reach, harness security, or questions about what an agent or framework can reach. Not a diff review."
+description: "Audits AI and agent exposure across the local agent-harness environment and, where applicable, the codebase it works in. Inventories AI frameworks, agent runtimes, MCP servers, credentials, ambient identities, hooks, skills, and plugins; maps downstream reach; and identifies boundaries that are asserted but not enforced. Use for AI/agent security audits, MCP exposure, credential scoping, agent permissions, egress, blast radius, shadow AI infrastructure, prompt-injection reach, harness security, or questions about what an agent or framework can reach. Not a diff review."
 ---
 
 # Agent Exposure Audit
 
-An on-demand audit of AI and agent exposure across a repository and, when accessible, the local agent environment.
+An on-demand audit of AI and agent exposure across the local agent environment and the repository it works in.
+
+Both surfaces matter, but do not assume the repository is where the exposure is.
 
 **Report only. Change nothing.**
 

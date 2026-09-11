@@ -9,9 +9,41 @@ Cursor, Pi, OpenCode, GitHub Copilot and Gemini CLI.
 
 ### [`agent-exposure-audit`](./agent-exposure-audit)
 
-An on-demand audit of AI and agent exposure across a repository and, where
-accessible, the local agent environment — MCP servers, hooks, skills, plugins,
-credentials, and the identities they inherit.
+**Coding agents accumulate authority that never appears in a code diff** —
+inherited credentials, permissions approved once for an earlier task, tool
+servers enabled for a pilot, hooks that run outside the permission layer. It
+grows one *yes* at a time, with no commit, no review and no expiry date.
+
+This is an on-demand audit of what that accumulation can actually reach: your
+agent environment first, and the repository it works in — MCP servers, hooks,
+skills, plugins, credentials, and the identities they inherit.
+
+#### What it looks for
+
+Not vulnerabilities in your code — authority in your environment. The recurring
+shapes, none of which appear in a diff:
+
+- **live credentials embedded in the agent's own permission rules**, pasted in
+  so a command would stop prompting, and never taken back out
+- **allowlists grown past anyone's ability to read them**, carrying wildcards
+  like `curl *`, `cat *`, or read access to an entire home directory — so
+  untrusted text reaching the model has a read-and-exfiltrate path through
+  pre-approved shell
+- **secrets doing double duty** — a model API key also serving as an
+  application's bearer token, where a token comparison leak becomes a model-key
+  leak
+- **service credentials scoped to a person's full access** where the
+  application needed one folder, because delegated auth was the quickest thing
+  that worked
+- **tool servers nobody owns** — referenced by checked-in configuration, living
+  in one developer's home directory, importing code the application deleted
+  months ago
+
+Do not be surprised if the repository and the production configuration come
+back clean while the findings cluster in the agent's operating environment.
+That is the surface your existing tooling was not built to see.
+
+#### How it works
 
 It follows one sequence — **Inventory → Identity → Reach → Boundary →
 Enforcement → Ownership** — on three principles:
