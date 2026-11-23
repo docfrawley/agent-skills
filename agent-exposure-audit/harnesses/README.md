@@ -28,7 +28,7 @@ Use these terms precisely:
 
 | Harness | Adapter | Status | Evidence | Checked |
 |---|---|---|---|---|
-| Claude Code | `claude-code.md` | Adapted | Documentation, and runtime observation | 2026-09-10 |
+| Claude Code | `claude-code.md` | Adapted | Documentation, and runtime observation | 2026-11-23 |
 | Codex | `codex.md` | Adapted | Documentation | 2026-09-09 |
 | Cursor | `cursor.md` | Adapted | Documentation | 2026-09-09 |
 | Pi | `pi.md` | Adapted | Documentation | 2026-09-09 |

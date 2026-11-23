@@ -2,129 +2,78 @@
 
 Read this reference when directed by `SKILL.md` before producing the final audit.
 
-## Scale the report to the surface
+## What is a finding
 
-Preserve the audit's evidence discipline and finding categories, but scale the presentation to the discovered surface.
+Every finding must name all three:
 
-- A small repository with two meaningful findings should receive a small report.
-- Omit empty explanatory prose and collapse empty finding categories rather than padding the report.
-- Keep **Could Not Enumerate** whenever material gaps exist.
-- Do not compress away evidence level, reach, enforcement status, or the smallest closing change for a real finding.
+1. **A concrete reachable thing** — a credential, identity, tool, data store, repository, or action, at `file:line` or a named config location.
+2. **A realistic trigger** — who or what could cause it to be used: hostile content the agent actually ingests, a compromised dependency or tool server, an auto-run hook, a mistaken agent action.
+3. **The consequence** — what is read, changed, sent, or spent that the owner would not have approved.
 
-The report should never be heavier than the evidence requires.
+If you cannot name all three, it is not a finding. Record it under **Could Not Enumerate** if a missing fact blocks it, or drop it.
 
-## Ranking
+These are **not** findings on their own:
 
-Rank by downstream blast radius. Lead with the single widest-reach finding.
+- A best practice that is absent with no reachable consequence ("no rotation policy," "MCP server is not pinned") unless you can state what that absence exposes.
+- Generic defense-in-depth advice.
+- "The agent could be prompt-injected." Injection matters only where a specific untrusted source meets a specific sensitive reach and a specific outbound or action path.
+- The user's own intended authority. An agent holding the developer's credentials to do the developer's work is the design; it becomes a finding when that authority materially exceeds the work, or is reachable by something less trusted than the developer.
+- A boundary that is assumed but guards nothing of consequence.
+- A configuration key or capability that exists but is unused, disabled, or unreachable in the effective configuration.
 
-Do not let a high CVSS score automatically outrank a lower-severity weakness attached to substantially broader downstream authority.
+When in doubt, prefer fewer, sharper findings. A finding the owner cannot act on dilutes the ones they can.
+
+## Priority
+
+Rank by downstream blast radius, not by CVSS. Lead with the single widest-reach finding. Calibrate against these anchors:
+
+- **P0** — reachable now, from untrusted input or with no approval in the path, to production systems, organization-wide credentials, or arbitrary code execution as the user. *Example: an auto-approved tool that ingests web content, alongside a token with org-wide repository write.*
+- **P1** — broad authority one plausible step away: a credential or identity scoped well beyond need, reachable by an agent that ingests untrusted content, or gated only by an approval that is easily pre-approved. *Example: a cloud admin profile inherited by every agent session.*
+- **P2** — real but bounded: limited scope, uncommon preconditions, or a single non-production resource. *Example: a project-scoped read/write key to a staging database.*
+- **P3** — hygiene with a nameable but small consequence, or a risk multiplier such as missing ownership on a live component.
+
+Rank by how many independent events must occur before the reach is used, not by how bad the end state is. A path that needs a third party compromised first — a package publisher, a tool-server operator, a marketplace — is **P1**, not P0, even when it then runs with no approval: one plausible step away. It is P0 only when that upstream step has already happened, or when the component can be driven by content the agent ingests in normal use.
+
+Priority cannot exceed the evidence: an **Inferred** reach claim cannot be P0 unless the inference is the only missing link and you say so. **Unverified** reach is not ranked; it goes under Could Not Enumerate with the query that would resolve it.
 
 ## Reach map
-
-Use:
 
 | Component | Exposure | Identity / Credential | Downstream Reach | Boundary | Evidence | Priority |
 |---|---|---|---|---|---|---|
 
-Where downstream reach cannot be verified, state exactly what external query or access would be required.
+The map answers: **if this component is compromised, manipulated, or misbehaves, what becomes reachable next?** Where downstream reach cannot be verified, state the external query or access that would verify it. Never include secret values.
 
 ## Finding structure
 
-For every finding provide:
+For each finding:
 
-### What and where
-
-Use `file:line` when available.
-
-### What it reaches
-
-List downstream systems, data stores, APIs, cloud resources, repositories, administrative actions, and credentials without exposing secret values.
-
-### Enforced or assumed
-
-Use **Enforced**, **Assumed**, or **Unverified**, and name the mechanism when known.
-
-### Evidence
-
-Use **Observed**, **Inferred**, or **Unverified** and explain briefly.
-
-### Why it matters
-
-Describe realistic blast radius rather than repeating a generic severity label.
-
-### Smallest closing change
-
-Recommend the narrowest change that materially reduces reach: narrower credential, shorter lifetime, project-scoped/read-only identity, network restriction, removal of unnecessary tool, separate workload identity, external authorization check, or inventory registration. Avoid redesign unless required.
+- **What and where** — `file:line` when available.
+- **What it reaches** — downstream systems, data, APIs, cloud resources, repositories, administrative actions, credentials (names only).
+- **Enforced or assumed** — **Enforced**, **Assumed**, or **Unverified**, naming the mechanism when known.
+- **Evidence** — **Observed**, **Inferred**, or **Unverified**, with a one-line basis.
+- **Why it matters** — the realistic blast radius, not a generic severity label.
+- **Smallest closing change** — the narrowest change that materially cuts reach: a narrower or shorter-lived credential, a project-scoped or read-only identity, a network restriction, removing an unneeded tool, a separate workload identity, an external authorization check, or registering the component in inventory. Avoid redesign unless required.
 
 ## Categories
 
-### Reachable Now
-
-Externally reachable or reachable from an untrusted input path.
-
-### Over-Scoped
-
-Legitimate access exists but authority materially exceeds need.
-
-### Assumed, Not Enforced
-
-A boundary is stated but no deterministic mechanism was found.
-
-### Unowned
-
-A live component lacks clear operational ownership.
+- **Reachable Now** — reachable externally or from an untrusted input path.
+- **Over-Scoped** — legitimate access whose authority materially exceeds need.
+- **Assumed, Not Enforced** — a stated boundary with no deterministic mechanism behind it.
+- **Unowned** — a live component without clear operational ownership.
 
 ## Could Not Enumerate
 
-For each material enumeration gap state:
+For each material gap: what could not be inspected, why, the security question left open, and the access or capability that would answer it. Where the gap exists because the audit's own boundary excludes a capability, say so and name the narrowest capability that would close it. An unanswered question with its price stated is a result; silently escalating to answer it is not. Never turn missing evidence into a clean bill of health.
 
-- what could not be inspected
-- why
-- what security question remains unanswered
-- what access or capability would be required to answer it
+## Output
 
-Where the gap exists because the audit's own execution boundary excludes the capability, say so plainly and name the narrowest capability that would close it. An unanswered question with its price stated is a result. Silently escalating authority to answer it is not.
+Scale the report to the surface. A small repository with two real findings gets a short report. Omit empty categories and explanatory padding, but never compress away evidence level, reach, enforcement status, or the closing change for a real finding. Keep Could Not Enumerate whenever material gaps exist.
 
-Do not silently turn missing evidence into a clean bill of health.
+Order, omitting empty sections:
 
-## Final output order
-
-Use this order when the surface is large enough to justify separate sections. For small audits, combine or omit empty sections while preserving all material findings and gaps.
-
-# Agent Exposure Audit
-
-## Executive Summary
-
-State the widest blast radius, most important assumed boundary, largest inventory gap, and overall confidence. Keep it short.
-
-## Inventory
-
-Present the inventory table.
-
-## Reach Map
-
-Present the consolidated blast-radius table.
-
-## Reachable Now
-
-Findings, if any.
-
-## Over-Scoped
-
-Findings, if any.
-
-## Assumed, Not Enforced
-
-Findings, if any.
-
-## Unowned
-
-Findings, if any.
-
-## Could Not Enumerate
-
-Material enumeration gaps and verification requirements, if any.
-
-## Priority Actions
-
-List the smallest changes that reduce the most blast radius first.
+1. **Executive Summary** — widest blast radius, most important assumed boundary, largest inventory gap, overall confidence. A few lines.
+2. **Inventory** table.
+3. **Reach Map**.
+4. Findings by category, each sorted by priority: **Reachable Now**, **Over-Scoped**, **Assumed, Not Enforced**, **Unowned**.
+5. **Could Not Enumerate**.
+6. **Priority Actions** — the smallest changes that remove the most blast radius, first.

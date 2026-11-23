@@ -1,7 +1,7 @@
 # Claude Code Adapter
 
 > **Status:** Adapted  
-> **Verification:** Current product documentation checked 2026-09-09. Tool surface and bypass examples observed directly from loaded tool schemas in a live session 2026-09-10 — runtime evidence, not documentation, and specific to that build. Product-specific paths and setting names are discovery hints and may change.
+> **Verification:** Current product documentation checked 2026-09-09. Tool surface and bypass examples observed directly from loaded tool schemas in a live session 2026-09-10 — runtime evidence, not documentation, and specific to that build. Auto-mode classifier behavior observed in a live audit 2026-11-23 (2.1.330). Product-specific paths and setting names are discovery hints and may change.
 
 Use this adapter when Claude Code is the active harness.
 
@@ -118,6 +118,8 @@ Read the failures, not the configuration. The distinction that makes this worth 
 | The operation succeeds | The restriction does not exist, whatever the settings say |
 
 **Do not substitute a self-description.** Asking a session to list the tools it holds yields **Inferred** evidence at best: deferred and lazily-loaded tools are not visible to the model until something pulls their schemas in, and on this harness that hidden set has included arbitrary-shell and remote-execution tools. A roster the model recites is a roster of what it can currently see.
+
+**Auto mode is a gate, not an absence.** In auto mode a model-based classifier reviews tool calls and refuses some at call time, with a refusal naming the classifier. The tools remain in the session's tool set, and the classifier's decisions are probabilistic, so it is never **Enforced** read-only: classify the audit's boundary as **Assumed, Not Enforced** and say the classifier is the only gate. It can also refuse the audit's own read-only lookups — such as a cloud identity query with a discovered credential. Record each refusal under **Could Not Enumerate** with the call that was refused; do not rephrase or route around it. Observed on 2026-11-23 with Claude Code 2.1.330.
 
 **From inside the audit,** during Inventory: derive the execution boundary from capabilities you have actually observed, and report it as **Enforced (Observed)** only when execution, mutation, egress and delegation are each demonstrably unavailable.
 
